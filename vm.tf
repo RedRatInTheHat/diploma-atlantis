@@ -47,7 +47,19 @@ data "template_file" "cloudinit" {
     webhook_secret   = var.webhook_secret
     repo             = var.github_repository
 
+    cloud_id           = var.cloud_id
+    folder_id          = var.folder_id
+    service_account_id = var.service_account_id
+    vms_ssh_key        = var.vms_ssh_key
+    sa_key_file_path   = var.atlantis_sa_key_file_path
+
     bucket_access_key = var.bucket_access_key
     bucket_secret_key = var.bucket_secret_key
+
+    key_id         = var.key_id
+    key_created_at = var.key_created_at
+    key_algorithm  = var.key_algorithm
+    public_key     = var.public_key
+    private_key    = var.private_key
   }
 }

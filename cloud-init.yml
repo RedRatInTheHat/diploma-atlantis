@@ -10,7 +10,7 @@ package_update: true
 package_upgrade: false
 
 write_files:
-  - path: /tmp/repos.yml
+  - path: /var/tmp/repos.yml
     content: |
       workflows:
         default:
@@ -20,13 +20,18 @@ write_files:
                   extra_args: 
                     - "-backend-config=access_key=$${ACCESS_KEY}"
                     - "-backend-config=secret_key=$${SECRET_KEY}"
-              - plan
+              - plan:
+                  extra_args:
+                    - "-var-file=/var/atlantis-vars/personal.auto.tfvars"
+                    
           apply:
             steps:
-              - apply     
-    owner: 'root:root'
-    permissions: '0666'
-  - path: /tmp/.terraformrc
+              - apply
+                  extra_args:
+                    - "-var-file=/var/atlantis-vars/personal.auto.tfvars"
+    owner: "root:root"
+    permissions: "0666"
+  - path: /var/tmp/.terraformrc
     content: |
       provider_installation {
         network_mirror {
@@ -37,8 +42,29 @@ write_files:
           exclude = ["registry.terraform.io/*/*"]
         }
       }
-    owner: 'root:root'
-    permissions: '0666'
+    owner: "root:root"
+    permissions: "0666"
+  - path: /var/tmp/personal.auto.tfvars
+    content: |
+      cloud_id = "${ cloud_id }"
+      folder_id = "${ folder_id }"
+      service_account_id = "${ service_account_id }"
+      vms_ssh_key = "${ vms_ssh_key }"
+      sa_key_file_path = "${ sa_key_file_path }"
+    owner: "root:root"
+    permissions: "0666"
+  - path: /var/tmp/key.json
+    content: |
+      {
+        "id": "${ key_id }",
+        "service_account_id": "${ service_account_id }",
+        "created_at": "${ key_created_at }",
+        "key_algorithm": "${ key_algorithm }",
+        "public_key": "${ public_key }",
+        "private_key": "${ private_key }"
+      }
+    owner: "root:root"
+    permissions: "0666"
 
 packages:
   - ca-certificates
@@ -52,6 +78,20 @@ runcmd:
   - apt update
   - apt install -y docker-ce docker-ce-cli containerd.io
   - apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-  - docker run -p 80:4141 --name atlantis -e ACCESS_KEY='${ bucket_access_key }' -e SECRET_KEY='${ bucket_secret_key }' ghcr.io/runatlantis/atlantis:${ atlantis_version } server --gh-user=${ gh_user } --gh-token=${ gh_token } --gh-webhook-secret=${ webhook_secret } --repo-allowlist=${ repo }
-  - sleep 10s
-  - docker cp /tmp/.terraformrc atlantis:/home/atlantis
+  - >
+    docker run -d -p 80:4141 
+    --name atlantis 
+    -e ACCESS_KEY='${ bucket_access_key }' 
+    -e SECRET_KEY='${ bucket_secret_key }' 
+    -v /var/tmp/repos.yml:/var/tmp/repos.yml 
+    -v /var/tmp/personal.auto.tfvars:/var/atlantis-vars/personal.auto.tfvars 
+    ghcr.io/runatlantis/atlantis:${ atlantis_version } 
+    server 
+    --gh-user=${ gh_user } 
+    --gh-token=${ gh_token } 
+    --gh-webhook-secret=${ webhook_secret } 
+    --repo-allowlist=${ repo } 
+    --repo-config=/var/tmp/repos.yml 
+    --var-file-allowlist=/var/atlantis-vars
+  - docker cp /var/tmp/.terraformrc atlantis:/home/atlantis
+  - docker cp /var/tmp/key.json atlantis:/var/tmp/key.json

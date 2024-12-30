@@ -4,6 +4,11 @@ variable "sa_key_file_path" {
   description = "The path to the service account key file"
 }
 
+variable "atlantis_sa_key_file_path" {
+  type        = string
+  description = "The path to the service account key file"
+}
+
 variable "default_zone" {
   type        = string
   default     = "ru-central1-a"
@@ -18,6 +23,11 @@ variable "cloud_id" {
 variable "folder_id" {
   type        = string
   description = "https://cloud.yandex.ru/docs/resource-manager/operations/folder/get-id"
+}
+
+variable "service_account_id" {
+  type        = string
+  description = "The ID of the service account"
 }
 
 # VPC
@@ -147,4 +157,29 @@ variable "bucket_access_key" {
 variable "bucket_secret_key" {
   type        = string
   description = "Secret key for bucket access"
+}
+
+variable "key_id" {
+  type        = string
+  description = "Id of the service account key"
+}
+
+variable "key_created_at" {
+  type        = string
+  description = "The date of the service account key creation"
+}
+
+variable "key_algorithm" {
+  type        = string
+  description = "The algorithm the servive account key was created with"
+}
+
+variable "public_key" {
+  type        = string
+  description = "Public part of the service account key"
+}
+
+variable "private_key" {
+  type        = string
+  description = "Private part of the service account key"
 }
